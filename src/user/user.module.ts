@@ -6,17 +6,21 @@ import { UserController } from './user.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from '../auth/auth.module';
+import { UserLog } from 'src/user-log/user-log.model';
+import { Transactional } from 'src/common/sequelize';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [
     forwardRef(() => AuthModule),
     PassportModule,
-    SequelizeModule.forFeature([User]),
+    RedisModule,
+    SequelizeModule.forFeature([User, UserLog]),
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'secretKey',
       signOptions: { expiresIn: '15m' },
     }),],
-  providers: [UserService],
+  providers: [UserService, Transactional],
   controllers: [UserController],
   exports: [UserService],
 })

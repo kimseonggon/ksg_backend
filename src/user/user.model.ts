@@ -1,10 +1,15 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, DeletedAt, Model, Table } from 'sequelize-typescript';
 
-@Table
+@Table({
+  tableName: 'users',
+  paranoid: true, // 👈 소프트 삭제 활성화
+  timestamps: true,
+})
 export class User extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
+    unique: 'unique_user_email' // 유니크 키 이름 지정
   })
   email: string;
 
@@ -26,5 +31,23 @@ export class User extends Model {
   })
   phone: string;
 
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: true
+  })
+  isActive: boolean;
 
+  @Column({
+    type: DataType.DATE
+  })
+  deactivatedFrom: Date;
+
+  @Column({
+    type: DataType.STRING
+  })
+  description: string;
+
+
+  @DeletedAt
+  declare deletedAt: Date; // 👈 삭제 시간 기록됨
 }

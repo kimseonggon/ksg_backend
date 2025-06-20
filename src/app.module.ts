@@ -3,9 +3,13 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ConfigModule } from '@nestjs/config';
+import { UserLogModule } from './user-log/user-log.module';
+import { RequestContextModule } from 'nestjs-request-context';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
+    RequestContextModule,
     ConfigModule.forRoot({ isGlobal: true }),
     SequelizeModule.forRoot({
       dialect: 'postgres',
@@ -17,8 +21,10 @@ import { ConfigModule } from '@nestjs/config';
       autoLoadModels: true,
       synchronize: true,
     }),
+    RedisModule,
     AuthModule,
     UserModule,
+    UserLogModule,
   ]
 })
 export class AppModule { }
