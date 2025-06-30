@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common'
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+  UnauthorizedException
+} from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Request } from 'express'
 import { AuthService } from './auth.service'
@@ -6,13 +12,16 @@ import { AuthService } from './auth.service'
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly logger = new Logger(AuthGuard.name)
-  constructor(private reflector: Reflector, private authService: AuthService) { }
+  constructor(
+    private reflector: Reflector,
+    private authService: AuthService
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
       const isPublic = this.reflector.getAllAndOverride<boolean>('isPublic', [
         context.getHandler(),
-        context.getClass(),
+        context.getClass()
       ])
 
       if (isPublic) {
@@ -29,7 +38,6 @@ export class AuthGuard implements CanActivate {
       }
       request['user'] = JSON.parse(userInfo)
       return true
-
     } catch (err) {
       this.logger.error(err.stack || err)
       throw new UnauthorizedException('시스템 인증을 실패하였습니다.')

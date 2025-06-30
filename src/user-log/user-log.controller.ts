@@ -1,13 +1,21 @@
-import { Body, Controller, Post, UseGuards, Delete } from '@nestjs/common';
-import { UserLogService } from './user-log.service';
-import { AuthGuard } from 'src/auth/auth.guard';
-import { Public } from 'src/auth/decorator';
-
+import {
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  Param
+} from '@nestjs/common'
+import { UserLogService } from './user-log.service'
+import { AuthGuard } from 'src/auth/auth.guard'
+import { Public } from 'src/auth/decorator'
 
 @UseGuards(AuthGuard)
 @Controller('user-log')
 export class UserLogController {
-  constructor(private usersLogService: UserLogService) { }
+  constructor(private usersLogService: UserLogService) {}
 
   @Public()
   @Post()
@@ -15,9 +23,9 @@ export class UserLogController {
     return this.usersLogService.create(user)
   }
 
-  @Delete()
-  async remove(@Body() dto) {
-    return this.usersLogService.remove(dto)
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id') id: number) {
+    return this.usersLogService.remove(id)
   }
-
 }
