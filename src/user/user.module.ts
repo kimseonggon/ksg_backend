@@ -10,12 +10,14 @@ import { UserLog } from 'src/user-log/user-log.model'
 import { Transactional } from 'src/common/sequelize'
 import { RedisModule } from 'src/redis/redis.module'
 import { UserForgot } from 'src/user-forgot/user-forgot.model'
+import { SenderModule } from 'src/sender/sender.module'
 
 @Module({
   imports: [
     forwardRef(() => AuthModule),
     PassportModule,
     RedisModule,
+    SenderModule,
     SequelizeModule.forFeature([User, UserLog, UserForgot]),
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'secretKey',

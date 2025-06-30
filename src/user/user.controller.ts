@@ -89,7 +89,7 @@ export class UserController {
       throw new BadRequestException('유효한 이메일이 아닙니다.')
     }
 
-    return this.usersService.createForgotNumber(foundUser, UserForgotType.EMAIL)
+    return this.usersService.createForgotNumber({ ...foundUser, email }, UserForgotType.EMAIL)
   }
 
   @Public()

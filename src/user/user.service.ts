@@ -22,7 +22,8 @@ import { RedisService } from 'src/redis/redis.service'
 import { UserForgot } from 'src/user-forgot/user-forgot.model'
 import { randomInt } from 'crypto'
 import { UserForgotType } from './types'
-import dayjs from 'src/utils/dayjs'
+import dayjs from 'dayjs'
+import { SenderService } from 'src/sender/sender.service'
 
 @Injectable()
 export class UserService {
@@ -37,7 +38,8 @@ export class UserService {
     private readonly redis: Redis,
     private transactional: Transactional,
     private jwtService: JwtService,
-    private redisService: RedisService
+    private redisService: RedisService,
+    private senderService: SenderService
   ) {}
 
   async create(userInfo: User): Promise<ResponseUserDto> {
@@ -127,21 +129,45 @@ export class UserService {
   }
 
   async findOneByUserEmail(email: string) {
-    return this.userModel.findOne({ where: { email } })
+    return this.userModel.findOne({ where: { email }, raw: true })
   }
 
   async createForgotNumber(user: any, type: UserForgotType) {
     const verificationNumber = randomInt(100_000, 1_000_000) // 6자리
     const expiredAfter = dayjs().add(30, 'minute').toDate()
     await this.userForgotModel.destroy({ where: { userId: user.id } })
-
     const forgot = await this.userForgotModel.create({
       userId: user.id,
       type,
       verificationNumber,
       expiredAfter
     })
-
+    const link = `http://localhost:4000/password/change?verificationNumber=${verificationNumber}`
+    await this.senderService.sendEmail({
+      receiver: user.email,
+      subject: '패스워드 찾기',
+      content: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div style="width: 640px; height: 570px; margin: 0 auto;">
+    <ul style="width: 342px; height: 24px; margin-top: 7px; margin-left: 100px; margin-bottom: 0px; padding-left: 20px; font-family: Spoqa Han Sans Neo; font-weight: 400; font-size: 12px; line-height: 24px; letter-spacing: -0.2px; color: #4D5968;">
+      <li>아래 링크는 이메일 발송 시점으로부터 30분간 유효합니다.</li>
+    </ul>
+    <a href="${link}" style="text-decoration-line: none;">
+      <div style="width: 450px; height: 56px; margin-top: 13px; margin-left: 100px; margin-bottom: 0px; background-color: #2079FF; color: #FFFFFF; border-radius: 4px; text-align: center; line-height: 56px;">
+        비밀번호 설정
+      </div>
+    </a>
+  </div>
+</body>
+</html>`
+    })
     return forgot
   }
 
