@@ -1,20 +1,20 @@
-import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import Redis from 'ioredis';
-import { UserService } from 'src/user/user.service';
-import { compareSync } from 'bcrypt';
-import { ResponseUserDto } from 'src/user/dto/user.dto';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import Redis from 'ioredis'
+import { UserService } from 'src/user/user.service'
+import { compareSync } from 'bcrypt'
+import { ResponseUserDto } from 'src/user/dto/user.dto'
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     private userService: UserService,
-    @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
-  ) { }
+    @Inject('REDIS_CLIENT') private readonly redisClient: Redis
+  ) {}
 
   async validateUser(email: string, password: string): Promise<ResponseUserDto> {
-    const user = await this.userService.findByEmail(email);
+    const user = await this.userService.findByEmail(email)
     if (!user) {
       throw new UnauthorizedException('가입된 회원이 아니거나 로그인정보가 틀립니다.')
     }
@@ -28,33 +28,43 @@ export class AuthService {
   }
 
   async login(user: ResponseUserDto) {
-    const payload = { email: user.email, sub: user.id };
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
-    await this.redisClient.set(`access:${accessToken}`, JSON.stringify({
-      user: user
-    }), 'EX', 60 * 60 * 24 * 7);
-    await this.redisClient.set(`refresh:${refreshToken}`, refreshToken, 'EX', 60 * 60 * 24 * 7);
-    await this.redisClient.set(`userId:${user.id}`, JSON.stringify({
-      accessToken: accessToken,
-      refreshToken: refreshToken
-    }), 'EX', 60 * 60 * 24 * 7);
+    const payload = { email: user.email, sub: user.id }
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' })
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' })
+    await this.redisClient.set(
+      `access:${accessToken}`,
+      JSON.stringify({
+        user: user
+      }),
+      'EX',
+      60 * 60 * 24 * 7
+    )
+    await this.redisClient.set(`refresh:${refreshToken}`, refreshToken, 'EX', 60 * 60 * 24 * 7)
+    await this.redisClient.set(
+      `userId:${user.id}`,
+      JSON.stringify({
+        accessToken: accessToken,
+        refreshToken: refreshToken
+      }),
+      'EX',
+      60 * 60 * 24 * 7
+    )
 
-    return { accessToken, refreshToken, user };
+    return { accessToken, refreshToken, user }
   }
 
   async refresh(userId: number, refreshToken: string) {
-    const stored = await this.redisClient.get(`refresh:${userId}`);
+    const stored = await this.redisClient.get(`refresh:${userId}`)
     if (!stored || stored !== refreshToken) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Invalid refresh token')
     }
-    const newAccessToken = this.jwtService.sign({ sub: userId }, { expiresIn: '15m' });
-    return { accessToken: newAccessToken };
+    const newAccessToken = this.jwtService.sign({ sub: userId }, { expiresIn: '15m' })
+    return { accessToken: newAccessToken }
   }
 
   async logout(userId: number) {
-    await this.redisClient.del(`refresh:${userId}`);
-    return { message: 'Logged out' };
+    await this.redisClient.del(`refresh:${userId}`)
+    return { message: 'Logged out' }
   }
 
   /**
@@ -73,7 +83,7 @@ export class AuthService {
     if (token) {
       const isBlacklisted = await this.redisClient.get(`blacklist:${token}`)
       if (isBlacklisted === '1') {
-        throw new UnauthorizedException('인증이 되지 않은 토큰입니다.');
+        throw new UnauthorizedException('인증이 되지 않은 토큰입니다.')
       }
     }
     return token

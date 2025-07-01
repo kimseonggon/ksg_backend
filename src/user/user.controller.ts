@@ -40,22 +40,9 @@ export class UserController {
     return this.usersService.remove(dto)
   }
 
-  @Patch(':id')
-  async update(@Body() dto) {
-    return this.usersService.update(dto)
-  }
-
   @Get('me')
   async me(@CurrentUser() user) {
     return user
-  }
-
-  @Get(':id')
-  @ApiOperation({
-    summary: '유저 조회'
-  })
-  async findOne(@Param('id') id: number): Promise<User | null> {
-    return this.usersService.findOne(id)
   }
 
   @Get('list')
@@ -66,6 +53,19 @@ export class UserController {
   async list(@Query() dto: SearchUserDto) {
     await new Promise((resolve) => setTimeout(resolve, 3000)) // 3초 대기
     return this.usersService.list(dto)
+  }
+
+  @Patch(':id')
+  async update(@Body() dto) {
+    return this.usersService.update(dto)
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: '유저 조회'
+  })
+  async findOne(@Param('id') id: number): Promise<User | null> {
+    return this.usersService.findOne(id)
   }
 
   @Public()
